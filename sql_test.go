@@ -2,8 +2,10 @@ package golangdatabase
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestExecSql(t *testing.T) {
@@ -12,7 +14,7 @@ func TestExecSql(t *testing.T) {
 
 	ctx := context.Background()
 	query := "INSERT INTO customer (name) VALUES('Tirta2')"
-	_,err := db.ExecContext(ctx,query)
+	_, err := db.ExecContext(ctx, query)
 
 	if err != nil {
 		panic(err)
@@ -26,23 +28,39 @@ func TestQuerySql(t *testing.T) {
 
 	ctx := context.Background()
 	query := "SELECT * FROM customer"
-	rows,err := db.QueryContext(ctx,query)
-	
+	rows, err := db.QueryContext(ctx, query)
+
 	if err != nil {
 		panic(err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var id int 
+		var id int
 		var name string
-		err = rows.Scan(&id,&name)
+		var email sql.NullString // null handler with sql.NullString
+		var balance int32
+		var birthDate sql.NullTime
+		var maried bool
+		var createdAt time.Time
+
+		err = rows.Scan(&id, &name, &email, &balance, &birthDate, &maried, &createdAt)
 
 		if err != nil {
 			panic(err)
 		}
 
-		fmt.Println(id,name)
+		fmt.Println("=========================")
+		fmt.Println("Name :", name)
+		if email.Valid {
+			fmt.Println("Email :", email.String)
+		}
+		fmt.Println("Balance :", balance)
+		if birthDate.Valid {
+			fmt.Println("BirthDate :", birthDate.Time)
+		}
+		fmt.Println("Married :", maried)
+		fmt.Println("Crated At :", createdAt)
 	}
 
 	fmt.Println("Done")
