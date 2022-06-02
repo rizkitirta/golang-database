@@ -65,3 +65,39 @@ func TestQuerySql(t *testing.T) {
 
 	fmt.Println("Done")
 }
+
+// contoh sql injection
+func TestSqlInjection(t *testing.T) {
+	db := GetConnection()
+	defer db.Close()
+
+	ctx := context.Background()
+	username := "admin"
+	password := "admin"
+	query := "SELECT * FROM users where username = '"+username+"' AND password = '"+password+"' "
+	rows, err := db.QueryContext(ctx, query)
+
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		var id int
+		var username string
+		var password string
+
+		err = rows.Scan(&id, &username,&password)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println("=========================")
+		fmt.Println("Username :", username)
+		fmt.Println("Password :", password)
+	}else {
+		fmt.Println("User tidak ditemukan!")
+	}
+
+}
+
