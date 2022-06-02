@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -167,4 +168,35 @@ func TestSqlInjectionSafeInsert(t *testing.T) {
 
 	}
 	fmt.Println("Register success")
+}
+
+func TestPrepareStatement(t *testing.T) {
+	db := GetConnection()
+	defer db.Close()
+
+	ctx := context.Background()
+	query := "INSERT INTO users (username, password) VALUES (?, ?)"
+	stmt, err := db.PrepareContext(ctx, query)
+	if err != nil {
+		panic(err)
+	}
+	defer stmt.Close()
+
+	for i := 0; i < 10; i++ {
+		username := "admin" + strconv.Itoa(i) // strconv.Itoa(i) convert int to string
+		password := "admin" + strconv.Itoa(i)
+
+		result, err := stmt.ExecContext(ctx, username, password)
+		if err != nil {
+			panic(err)
+		}
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println("=========================")
+		fmt.Println("User ke", id)
+	}
 }
