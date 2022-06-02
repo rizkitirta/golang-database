@@ -200,3 +200,41 @@ func TestPrepareStatement(t *testing.T) {
 		fmt.Println("User ke", id)
 	}
 }
+
+func TestDBTransaction(t *testing.T) {
+	db := GetConnection()
+	defer db.Close()
+
+	ctx := context.Background()
+	tx, err := db.Begin()
+	if err != nil {
+		panic(err)
+	}
+
+	query := "INSERT INTO users (username, password) VALUES (?, ?)"
+
+	for i := 0; i < 10; i++ {
+		username := "admin" + strconv.Itoa(i) // strconv.Itoa(i) convert int to string
+		password := "admin" + strconv.Itoa(i)
+
+		result, err := tx.ExecContext(ctx, query, username, password)
+		if err != nil {
+			panic(err)
+		}
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println("=========================")
+		fmt.Println("User ke", id)
+	}
+
+	err = tx.Rollback()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Commit success")
+}
