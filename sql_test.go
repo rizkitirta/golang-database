@@ -74,7 +74,7 @@ func TestSqlInjection(t *testing.T) {
 	ctx := context.Background()
 	username := "admin"
 	password := "admin"
-	query := "SELECT * FROM users where username = '"+username+"' AND password = '"+password+"' "
+	query := "SELECT * FROM users where username = '" + username + "' AND password = '" + password + "' "
 	rows, err := db.QueryContext(ctx, query)
 
 	if err != nil {
@@ -87,7 +87,7 @@ func TestSqlInjection(t *testing.T) {
 		var username string
 		var password string
 
-		err = rows.Scan(&id, &username,&password)
+		err = rows.Scan(&id, &username, &password)
 		if err != nil {
 			panic(err)
 		}
@@ -95,9 +95,76 @@ func TestSqlInjection(t *testing.T) {
 		fmt.Println("=========================")
 		fmt.Println("Username :", username)
 		fmt.Println("Password :", password)
-	}else {
+	} else {
 		fmt.Println("User tidak ditemukan!")
 	}
 
 }
 
+func TestSqlInjectionSafe(t *testing.T) {
+	db := GetConnection()
+	defer db.Close()
+
+	ctx := context.Background()
+	username := "admin"
+	password := "admin"
+	query := "SELECT * FROM users WHERE username = ? AND password = ?"
+	rows, err := db.QueryContext(ctx, query, username, password) // SQL PARAMETER
+
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		var id int
+		var username string
+		var password string
+
+		err = rows.Scan(&id, &username, &password)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println("=========================")
+		fmt.Println("Username :", username)
+		fmt.Println("Password :", password)
+		fmt.Println("=========================")
+	} else {
+		fmt.Println("User tidak ditemukan!")
+	}
+
+}
+
+func TestSqlInjectionSafeInsert(t *testing.T) {
+	db := GetConnection()
+	defer db.Close()
+
+	ctx := context.Background()
+	username := "admin3"
+	password := "admin2"
+	query := "INSERT INTO users (username, password) VALUES (?, ?)"
+	rows, err := db.QueryContext(ctx, query, username, password) // SQL PARAMETER
+
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		var id int
+		var username string
+		var password string
+
+		err = rows.Scan(&id, &username, &password)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println("=========================")
+		fmt.Println("Username :", username)
+		fmt.Println("Password :", password)
+
+	}
+	fmt.Println("Register success")
+}
